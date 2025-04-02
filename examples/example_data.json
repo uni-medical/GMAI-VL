@@ -1,0 +1,18 @@
+[
+    {
+        "image": "example.tif",
+        "conversations": [
+            {
+                "from": "human",
+                "value": "<image>\nCould you kindly generate a caption that provides an overview of the medical image depicted here?"
+            },
+            {
+                "from": "gpt",
+                "value": "This histopathological image exhibits a section of tissue featuring glandular structures lined by columnar epithelial cells. These cells have prominent, elongated nuclei oriented perpendicularly to the basement membrane. The glands are organized in a regular, orderly fashion, consistent with typical glandular architecture. The stroma between the glands appears fibrous and is interspersed with small, round stromal cells.\n\nThe epithelial lining shows the presence of goblet cells, which contain mucin, imparting a characteristic pale and vacuolated appearance to the cytoplasm. The lamina propria, the layer of connective tissue beneath the epithelial layer, is moderately cellular with a mix of lymphocytes and plasma cells. Vascular structures are noticeable within the connective tissue, indicative of a well-vascularized medium.\n\nThe overall histological structure depicted in the image adheres to the known microscopic anatomy of colonic mucosa. There is no evident disruption of the glandular architecture or cellular atypia, which would typically suggest pathological change, maintaining an overall appearance of healthy tissue."
+            }
+        ],
+        "id": "2d#cls#histopathology#crc100k#images#NORM#example.tif",
+        "width": 224,
+        "height": 224
+    }
+]

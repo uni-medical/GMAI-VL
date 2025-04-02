@@ -1,0 +1,9 @@
+{
+    "FILE1": {
+        "image_dir": "",
+        "annotations": "examples/example_data.json",
+        "sample_ratio": 1.0,
+        "length": 38276,
+        "data_augment": true
+    },
+}
