@@ -84,8 +84,8 @@ For evaluation, please use the [VLMEvalKit](https://github.com/open-compass/VLME
 
 - **2025-04-02**: The training code and model weight for the GMAI-VL model has been officially released! 🎉  
 This update includes detailed instructions for model training, dataset preparation, and evaluation.
-- **11.21.2024**: The paper was officially released on [arXiv](https://arxiv.org/abs/2411.14522)!
-- **Coming Soon**: Code, dataset, and model weights will be released. Please watch this repository for updates. We are committed to making these resources available as soon as possible. Please watch this repository or check back regularly for updates.
+- **2024-11-21**: The paper was officially released on [arXiv](https://arxiv.org/abs/2411.14522)!
+- **Coming Soon**: dataset will be released. Please watch this repository for updates. We are committed to making these resources available as soon as possible. Please watch this repository or check back regularly for updates.
 
 ## 🔗 Stay Connected
 
