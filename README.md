@@ -14,8 +14,8 @@ This repository includes:
 To set up the environment for training, please follow the instructions in the [xtuner repository](https://github.com/InternLM/xtuner). Ensure that all dependencies are correctly installed.
 ```bash
 git clone https://github.com/uni-medical/GMAI-VL
-cd xtuner
-# Follow the instructions in their README to set up dependencies
+cd GMAI-VL
+pip install -e .
 ```
 ### 2. Data Preparation
 
