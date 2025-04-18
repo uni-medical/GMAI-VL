@@ -92,6 +92,16 @@ This update includes detailed instructions for model training, dataset preparati
 For inquiries, collaboration opportunities, or access requests, feel free to reach out via email or open a GitHub issue.
 
 Thank you for your interest and support!
+
+## 🙏 Acknowledgements
+
+We would like to express our sincere gratitude to the open-source community. Our work is built upon the excellent contributions of the following toolkits:
+
+- **[XTuner](https://github.com/InternLM/xtuner)**: An efficient, flexible, and full-featured toolkit for fine-tuning large language and vision-language models. It served as the core training framework for GMAI-VL.
+- **[VLMEvalKit](https://github.com/open-compass/VLMEvalKit)**: A comprehensive evaluation toolkit for large vision-language models (LVLMs). It enabled us to conduct rigorous and standardized evaluations across multiple benchmarks.
+
+We deeply appreciate the efforts of the developers and contributors behind these projects.
+
 ## 📄 Paper and Citation
 
 Our paper has been published on [arXiv](https://arxiv.org/abs/2411.14522). If you use our work in your research, please consider citing us:
