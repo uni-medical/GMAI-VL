@@ -11,10 +11,11 @@ from peft import PeftModel
 from transformers import (AutoModel, AutoModelForCausalLM, AutoTokenizer,
                           BitsAndBytesConfig, CLIPImageProcessor,
                           CLIPVisionModel, GenerationConfig)
+from transformers.generation.streamers import TextStreamer
 
 from xtuner.dataset.utils import expand2square, load_image
 from xtuner.model.utils import prepare_inputs_labels_for_multimodal
-from xtuner.tools.utils import get_stop_criteria, get_streamer
+from xtuner.tools.utils import get_stop_criteria
 from xtuner.utils import (DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX,
                           PROMPT_TEMPLATE, SYSTEM_TEMPLATE)
 
@@ -114,6 +115,11 @@ def parse_args():
         'tokens with probabilities that add up to top_p or higher are '
         'kept for generation.')
     parser.add_argument(
+        '--repetition-penalty',
+        type=float,
+        default=1.0,
+        help='The parameter for repetition penalty. 1.0 means no penalty.')
+    parser.add_argument(
         '--seed',
         type=int,
         default=0,
@@ -182,7 +188,10 @@ def main():
         if args.adapter is not None:
             print(f'Loading adapter from {args.adapter}...')
             llm.model = PeftModel.from_pretrained(
-                llm.model, args.adapter, offload_folder=args.offload_folder)
+                llm.model,
+                args.adapter,
+                offload_folder=args.offload_folder,
+                trust_remote_code=True)
         search_tool = GoogleSearch(api_key=SERPER_API_KEY)
         chatbot = ReAct(
             llm=llm,
@@ -232,7 +241,10 @@ def main():
         print(f'Load LLM from {args.model_name_or_path}')
         if args.adapter is not None:
             llm = PeftModel.from_pretrained(
-                llm, args.adapter, offload_folder=args.offload_folder)
+                llm,
+                args.adapter,
+                offload_folder=args.offload_folder,
+                trust_remote_code=True)
             print(f'Load adapter from {args.adapter}')
         if args.llava is not None:
             llava_path = snapshot_download(
@@ -260,7 +272,10 @@ def main():
             if 'llm_adapter' in os.listdir(llava_path):
                 adapter_path = osp.join(llava_path, 'llm_adapter')
                 llm = PeftModel.from_pretrained(
-                    llm, adapter_path, offload_folder=args.offload_folder)
+                    llm,
+                    adapter_path,
+                    offload_folder=args.offload_folder,
+                    trust_remote_code=True)
                 print(f'Load LLM adapter from {args.llava}')
             if 'visual_encoder_adapter' in os.listdir(llava_path):
                 adapter_path = osp.join(llava_path, 'visual_encoder_adapter')
@@ -273,7 +288,9 @@ def main():
             # build projector
             projector_path = osp.join(llava_path, 'projector')
             projector = AutoModel.from_pretrained(
-                projector_path, torch_dtype=TORCH_DTYPE_MAP[args.torch_dtype])
+                projector_path,
+                torch_dtype=TORCH_DTYPE_MAP[args.torch_dtype],
+                trust_remote_code=True)
             print(f'Load projector from {args.llava}')
 
             projector.cuda()
@@ -289,7 +306,7 @@ def main():
                 image, tuple(int(x * 255) for x in image_processor.image_mean))
             image = image_processor.preprocess(
                 image, return_tensors='pt')['pixel_values'][0]
-            image = image.cuda().unsqueeze(0)
+            image = image.cuda().unsqueeze(0).to(visual_encoder.dtype)
             visual_outputs = visual_encoder(image, output_hidden_states=True)
             pixel_values = projector(
                 visual_outputs.hidden_states[args.visual_select_layer][:, 1:])
@@ -304,9 +321,9 @@ def main():
             tokenizer=tokenizer, stop_words=stop_words)
 
         if args.no_streamer:
-            Streamer = None
+            streamer = None
         else:
-            Streamer = get_streamer(llm)
+            streamer = TextStreamer(tokenizer, skip_prompt=True)
 
         gen_config = GenerationConfig(
             max_new_tokens=args.max_new_tokens,
@@ -314,6 +331,7 @@ def main():
             temperature=args.temperature,
             top_p=args.top_p,
             top_k=args.top_k,
+            repetition_penalty=args.repetition_penalty,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.pad_token_id
             if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
@@ -378,8 +396,7 @@ def main():
                 else:
                     ids = tokenizer.encode(
                         inputs, return_tensors='pt', add_special_tokens=False)
-                streamer = Streamer(
-                    tokenizer) if Streamer is not None else None
+
                 if args.with_plugins is not None:
                     generate_output = llm.generate(
                         inputs=ids.cuda(),
@@ -407,12 +424,11 @@ def main():
                         add_special_tokens=False)
                     new_ids = torch.cat((generate_output, extent_text_ids),
                                         dim=1)
-                    new_streamer = Streamer(
-                        tokenizer) if Streamer is not None else None
+
                     generate_output = llm.generate(
                         inputs=new_ids.cuda(),
                         generation_config=gen_config,
-                        streamer=new_streamer,
+                        streamer=streamer,
                         stopping_criteria=stop_criteria)
                     if streamer is None:
                         output_text = tokenizer.decode(
@@ -450,8 +466,6 @@ def main():
                 mm_inputs = prepare_inputs_labels_for_multimodal(
                     llm=llm, input_ids=ids, pixel_values=pixel_values)
 
-                streamer = Streamer(
-                    tokenizer) if Streamer is not None else None
                 generate_output = llm.generate(
                     **mm_inputs,
                     generation_config=gen_config,

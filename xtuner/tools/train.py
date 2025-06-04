@@ -19,6 +19,7 @@ from transformers import TrainingArguments
 from xtuner.configs import cfgs_name_path
 from xtuner.dataset.collate_fns import default_collate_fn
 from xtuner.model.modules import dispatch_modules
+from xtuner.model.modules.dispatch import SUPPORT_FLASH2
 from xtuner.model.utils import LoadWoInit, find_all_linear_names, traverse_dict
 from xtuner.registry import BUILDER, MAP_FUNC
 from xtuner.tools.utils import (auto_dtype_of_deepspeed_config,
@@ -76,6 +77,53 @@ def register_function(cfg_dict):
             register_function(value)
 
 
+def check_cfg(cfg, args):
+    if getattr(cfg, 'use_varlen_attn',
+               False) and cfg.train_dataloader.batch_size > 1:
+        raise NotImplementedError(
+            f'If utilizing varlen attention, the batch size should be'
+            f' set to 1, but got {cfg.train_dataloader.batch_size}')
+
+    if getattr(cfg, 'use_varlen_attn', False):
+        sequence_parallel = getattr(cfg, 'sequence_parallel', 1)
+        max_length = getattr(cfg.train_dataloader.dataset, 'max_length', None)
+        if max_length is not None:
+            assert max_length % sequence_parallel == 0, \
+                ('When using varlen attention, `max_length` should be evenly '
+                 'divided by sequence parallel world size, but got '
+                 f'max_length = {max_length} and sequence_parallel = '
+                 f'{sequence_parallel}')
+
+    if getattr(cfg, 'sequence_parallel_size', 1) > 1:
+        assert SUPPORT_FLASH2, ('`flash_attn` is required if you want to use '
+                                'sequence parallel.')
+        attn_implementation = getattr(cfg.model.llm, 'attn_implementation',
+                                      None)
+        assert (attn_implementation is None or
+                attn_implementation == 'flash_attention_2'), \
+            ('If you want to use sequence parallel, please set '
+                'attn_implementation to `flash_attention_2` or do not '
+                f'set this attribute. Got `{attn_implementation}` .')
+
+    if getattr(cfg, 'use_varlen_attn', False):
+        assert SUPPORT_FLASH2, ('`flash_attn` is required if you set '
+                                '`use_varlen_attn` to True.')
+        attn_implementation = getattr(cfg.model.llm, 'attn_implementation',
+                                      None)
+        assert (attn_implementation is None or
+                attn_implementation == 'flash_attention_2'), \
+            ('If you want to set `use_varlen_attn` to True, please set'
+                ' attn_implementation to `flash_attention_2` or do not '
+                f'set this attribute. Got `{attn_implementation}` .')
+
+    if args.deepspeed is None:
+        assert getattr(cfg, 'sequence_parallel_size', 1) == 1, \
+            ('Sequence parallel training without DeepSpeed lacks validation.'
+             'Please use DeepSpeed to optimize the training phase by '
+             '`--deepspeed deepspeed_zero1 (deepspeed_zero2 or '
+             'deepspeed_zero3)`.')
+
+
 def main():
     args = parse_args()
 
@@ -95,6 +143,8 @@ def main():
     # register FunctionType object in cfg to `MAP_FUNC` Registry and
     # change these FunctionType object to str
     register_function(cfg._cfg_dict)
+
+    check_cfg(cfg, args)
 
     if cfg.get('framework', 'mmengine').lower() == 'huggingface':
         # set default training_args
@@ -166,7 +216,15 @@ def main():
                 level=logging.INFO)
         elif args.resume is not None:
             # Use resumed seed
-            resumed_seed = get_seed_from_checkpoint(args.resume)
+            from mmengine.fileio import PetrelBackend, get_file_backend
+
+            from xtuner.utils.fileio import patch_fileio
+            backend = get_file_backend(args.resume)
+            if isinstance(backend, PetrelBackend):
+                with patch_fileio():
+                    resumed_seed = get_seed_from_checkpoint(args.resume)
+            else:
+                resumed_seed = get_seed_from_checkpoint(args.resume)
             cfg.merge_from_dict(dict(randomness=dict(seed=resumed_seed)))
             if args.seed is not None and args.seed != resumed_seed:
                 print_log(
@@ -269,7 +327,10 @@ def main():
                     gradient_accumulation_steps=grad_accum,
                     train_micro_batch_size_per_gpu=train_bs,
                     gradient_clipping=grad_clip,
-                    exclude_frozen_parameters=exclude_frozen_parameters)
+                    exclude_frozen_parameters=exclude_frozen_parameters,
+                    sequence_parallel_size=getattr(cfg,
+                                                   'sequence_parallel_size',
+                                                   1))
                 cfg.__setitem__('strategy', strategy)
                 optim_wrapper = dict(
                     type='DeepSpeedOptimWrapper',
