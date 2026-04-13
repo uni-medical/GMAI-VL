@@ -1,11 +1,63 @@
-# GMAI-VL & GMAI-VL-5.5M: A General Medical Vision-Language Model and Multimodal Dataset
+# GMAI-VL & GMAI-VL-5.5M: A Large Vision-Language Model and A Comprehensive Multimodal Dataset Towards General Medical AI
 
-Welcome to the GMAI-VL code repository, which accompanies the paper "GMAI-VL & GMAI-VL-5.5M: A General Medical Vision-Language Model and Multimodal Dataset." This repository provides the resources needed for reproducing the results and furthering research in medical AI through vision-language models.
-This repository includes:
+<p align="center">
+    <a href="https://arxiv.org/abs/2411.14522"><img src="https://img.shields.io/badge/arXiv-2411.14522-b31b1b.svg?style=flat-square" alt="arXiv"></a>
+    <a href="https://ojs.aaai.org/index.php/AAAI/article/view/39485/43446"><img src="https://img.shields.io/badge/AAAI-2026-brightgreen?style=flat-square" alt="AAAI"></a>
+    <a href="https://huggingface.co/datasets/General-Medical-AI/GMAI-VL-5.5M"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset-yellow?style=flat-square" alt="Hugging Face"></a>
+</p>
 
-- **GMAI-VL**: A state-of-the-art general medical vision-language model.
-- **GMAI-VL-5.5M**: A comprehensive multimodal medical dataset containing 5.5 million images and associated text, designed to support a wide range of medical AI research.
+Welcome to the official code repository for **GMAI-VL & GMAI-VL-5.5M** (AAAI 2026). This repository provides the training code needed for reproducing the results and furthering research in medical AI through vision-language models.
 
+- **GMAI-VL**: A state-of-the-art general medical vision-language model that achieves **88.48%** on OmniMedVQA with only 7B parameters, surpassing models with 34B+ parameters.
+- **GMAI-VL-5.5M**: The largest open-source medical multimodal dataset with **5.5 million** QA pairs from **219** professional medical data sources, covering **13** imaging modalities and **18** clinical departments. Available on [Hugging Face](https://huggingface.co/datasets/General-Medical-AI/GMAI-VL-5.5M).
+
+
+## 📊 GMAI-VL-5.5M Dataset
+
+GMAI-VL-5.5M is systematically constructed from **219 professional medical data sources** using an **Annotation-Guided Data Generation** pipeline — all text is grounded in expert annotations, not hallucinated.
+
+### Dataset Subsets
+
+| Subset | Size | Type | Description |
+|:---|:---|:---|:---|
+| GMAI-MM-Caption | 1.7M | Multimodal | High-quality medical image captions |
+| GMAI-MM-Percept | 1.3M | Multimodal | Medical image classification & segmentation labels |
+| GMAI-MM-Instrunct | 0.9M | Multimodal | Medical image analysis instruction QA |
+| GMAI-Text-Single | 1.0M | Text-only | Single-turn medical text QA |
+| GMAI-Text-Multi | 0.7M | Text-only | Multi-turn medical text QA |
+
+### Comparison with Existing Datasets
+
+| Dataset | Scale | Modalities | Languages | Traceable | Source |
+|:---|:---|:---|:---|:---|:---|
+| PathVQA | 32.7K | Pathology | EN | ✗ | Textbooks |
+| MIMIC-CXR | 227K | X-Ray | EN | ✓ | Hospital |
+| PMC-OA | 1.65M | Multi | EN | ✗ | PubMed |
+| PubMedVision | 1.29M | Multi | EN&CN | ✗ | PubMed |
+| **GMAI-VL-5.5M** | **5.5M** | **Multi (13)** | **EN&CN** | **✓** | **219 medical datasets** |
+
+👉 Download: [🤗 Hugging Face](https://huggingface.co/datasets/General-Medical-AI/GMAI-VL-5.5M)
+
+## 🏥 GMAI-VL Model
+
+GMAI-VL is built on the LLaVA architecture with **InternLM2.5-7B** (LLM) + **CLIP Vision Encoder** + **MLP Projector**, trained using a three-stage progressive strategy:
+
+| Stage | Strategy | Trainable Components | Learning Rate |
+|:---|:---|:---|:---|
+| Stage I | Shallow Alignment | Projector only | 1e-3 |
+| Stage II | Deep Alignment | Projector + Vision Encoder | 1e-4 |
+| Stage III | Instruction Tuning | Full model | 1e-5 |
+
+### Benchmark Results
+
+| Model | Params | OmniMedVQA | GMAI-MMBench | MMMU H&M | VQA-RAD |
+|:---|:---|:---|:---|:---|:---|
+| InternVL2 | 40B | 78.70 | — | — | — |
+| HuatuoGPT-Vision | 34B | 73.23 | — | 50.3 | — |
+| medgemma | 4B | 81.92 | — | 43.3 | — |
+| **GMAI-VL** | **7B** | **88.48** | **62.43** | **51.3** | **66.3** |
+
+> With only **7B** parameters, GMAI-VL outperforms models with 34B+ parameters on multiple benchmarks, demonstrating the value of **high-quality data + progressive training**.
 
 ## 🛠️ Model Training Instructions
 
@@ -76,16 +128,22 @@ torchrun --nnodes=${WORLD_SIZE} --node_rank=${RANK} --nproc_per_node=${NPROC_PER
     --dset-cache-dir $work_dir/cache/ \
     --dset-from-cache
   ```
-💡 Note: Our training follows a multi-stage strategy. At each stage, different components (e.g., LLM or ViT) may be frozen or fine-tuned. Please adjust flags such as --freeze-llm, --freeze-vit, and learning rates accordingly, as described in the paper.
-## 📊 Evaluation
-For evaluation, please use the [VLMEvalKit](https://github.com/open-compass/VLMEvalKit). It provides comprehensive tools for evaluating vision-language models on various tasks.
+💡 Note: Our training follows a multi-stage strategy. At each stage, different components (e.g., LLM or ViT) may be frozen or fine-tuned. Please adjust flags such as `--freeze-llm`, `--freeze-vit`, and learning rates accordingly, as described in the paper.
 
-## 📅 Release Timeline
+## 📈 Evaluation
 
-- **2025-04-02**: The training code and model weight for the GMAI-VL model has been officially released! 🎉  
-This update includes detailed instructions for model training, dataset preparation, and evaluation.
-- **2024-11-21**: The paper was officially released on [arXiv](https://arxiv.org/abs/2411.14522)!
-- **Coming Soon**: dataset will be released. Please watch this repository for updates. We are committed to making these resources available as soon as possible. Please watch this repository or check back regularly for updates.
+For evaluation, we use [VLMEvalKit](https://github.com/open-compass/VLMEvalKit). GMAI-VL has been evaluated on **7 mainstream medical multimodal benchmarks**: OmniMedVQA, GMAI-MMBench, MMMU (Health & Medicine), VQA-RAD, SLAKE, PMC-VQA, and PathVQA. See the [paper](https://arxiv.org/abs/2411.14522) for full results.
+
+## 📦 Open-Source Resources
+
+| Resource | Link |
+|:---|:---|
+| **Paper (AAAI 2026)** | [Proceedings](https://ojs.aaai.org/index.php/AAAI/article/view/39485/43446) |
+| **Paper (arXiv)** | [arXiv:2411.14522](https://arxiv.org/abs/2411.14522) |
+| **GMAI-VL-5.5M Dataset** | [🤗 Hugging Face](https://huggingface.co/datasets/General-Medical-AI/GMAI-VL-5.5M) |
+| **Training Code** | This repository |
+| **Training Framework** | [XTuner](https://github.com/InternLM/xtuner) |
+| **Evaluation Toolkit** | [VLMEvalKit](https://github.com/open-compass/VLMEvalKit) |
 
 ## 🔗 Stay Connected
 
@@ -102,15 +160,16 @@ We would like to express our sincere gratitude to the open-source community. Our
 
 We deeply appreciate the efforts of the developers and contributors behind these projects.
 
-## 📄 Paper and Citation
+## 📄 Citation
 
-Our paper has been published on [arXiv](https://arxiv.org/abs/2411.14522). If you use our work in your research, please consider citing us:
-
-### BibTeX Citation
+If you find our work helpful in your research, please consider citing us:
 ```bibtex
-@article{li2024gmai,
-      title={GMAI-VL & GMAI-VL-5.5M: A Large Vision-Language Model and A Comprehensive Multimodal Dataset Towards General Medical AI},
-      author={Tianbin Li, Yanzhou Su, Wei Li, Bin Fu, Zhe Chen, Ziyan Huang, Guoan Wang, Chenglong Ma, Ying Chen, Ming Hu, Yanjun Li, Pengcheng Chen, Xiaowei Hu, Zhongying Deng, Yuanfeng Ji, Jin Ye, Yu Qiao, Junjun He},
-  journal={arXiv preprint arXiv:2411.14522},
-  year={2024}
+@inproceedings{li2026gmai,
+  title={Gmai-vl \& gmai-vl-5.5 m: A large vision-language model and a comprehensive multimodal dataset towards general medical ai},
+  author={Li, Tianbin and Su, Yanzhou and Li, Wei and Fu, Bin and Chen, Zhe and Huang, Ziyan and Wang, Guoan and Ma, Chenglong and Chen, Ying and Hu, Ming and others},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={40},
+  number={28},
+  pages={23177--23185},
+  year={2026}
 }
