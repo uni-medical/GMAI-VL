@@ -401,7 +401,7 @@ def build_demo() -> gr.Blocks:
       border-radius: 10px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
     }
-    .sample-gallery { max-width: 760px; margin: -4px 0 8px 8px; }
+    .sample-gallery { width: calc(100% - 16px); margin: -4px 8px 12px 8px; }
     .sample-gallery .grid-wrap { border: 0 !important; background: transparent !important; }
     .sample-gallery img { border-radius: 7px !important; }
     .sample-gallery .thumbnail-item { border-radius: 8px !important; }
@@ -436,9 +436,9 @@ def build_demo() -> gr.Blocks:
                 gallery = gr.Gallery(
                     value=samples,
                     label="Samples",
-                    columns=min(len(samples), 7),
-                    rows=1,
-                    height=124,
+                    columns=4,
+                    rows=max(2, min(4, (len(samples) + 3) // 4)),
+                    height=252,
                     object_fit="cover",
                     allow_preview=False,
                     show_download_button=False,
