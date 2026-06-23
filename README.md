@@ -59,6 +59,17 @@ GMAI-VL is built on the LLaVA architecture with **InternLM2.5-7B** (LLM) + **CLI
 
 > With only **7B** parameters, GMAI-VL outperforms models with 34B+ parameters on multiple benchmarks, demonstrating the value of **high-quality data + progressive training**.
 
+## 🖥️ Visualization Demo
+
+A Gradio-based visualization demo is available in [`demo/gmai_vl_demo`](demo/gmai_vl_demo). It supports medical image upload, preset multimodal examples, task/body-system controls, and screenshot-friendly model responses.
+
+```bash
+cd demo/gmai_vl_demo
+pip install -r requirements-gmai-vl-demo.txt
+export GMAI_VL_MODEL_PATH=./model_weight
+PORT=10083 bash run_demo.sh
+```
+
 ## 🛠️ Model Training Instructions
 
 ### 1. Installation

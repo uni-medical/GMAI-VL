@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+gradio_tmp/
+logs/
+model_weight/
+

@@ -1,0 +1,15 @@
+accelerate
+einops
+gradio==4.44.1
+fastapi==0.112.4
+loguru
+numpy==1.26.4
+openpyxl
+pandas==2.2.3
+pillow
+pydantic==2.10.6
+pydantic-core==2.27.2
+scipy
+sentencepiece<0.2.0
+torch<2.7
+transformers==4.46.3

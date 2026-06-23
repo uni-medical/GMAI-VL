@@ -1,0 +1,44 @@
+{
+  "Chest X-ray": {
+    "file": "chest_xray.png",
+    "task": "Report",
+    "body_system": "Chest / Lung",
+    "question": "Please describe this chest X-ray and provide a concise radiology-style impression."
+  },
+  "Abdomen CT": {
+    "file": "abdomen_ct.png",
+    "task": "Localization",
+    "body_system": "Abdomen",
+    "question": "这是一张腹部 CT 示例图。请描述主要可见结构，并说明你会关注哪个区域。"
+  },
+  "Retina": {
+    "file": "retina.png",
+    "task": "VQA",
+    "body_system": "Eye / Retina",
+    "question": "Describe this fundus image. Are there any visible retinal features that should be mentioned?"
+  },
+  "Pathology": {
+    "file": "pathology.png",
+    "task": "Report",
+    "body_system": "Pathology",
+    "question": "请描述这张病理切片示例图，并给出可能需要进一步判断的组织学特征。"
+  },
+  "Dermoscopy": {
+    "file": "dermoscopy.png",
+    "task": "Report",
+    "body_system": "Skin / Dermoscopy",
+    "question": "请描述这张皮肤镜示例图，重点说明颜色、边界和结构特征。"
+  },
+  "Endoscopy": {
+    "file": "endoscopy.png",
+    "task": "Report",
+    "body_system": "Gastrointestinal / Endoscopy",
+    "question": "请描述这张内窥镜照片，指出黏膜外观和可能需要关注的异常区域。"
+  },
+  "MR": {
+    "file": "MR.png",
+    "task": "Report",
+    "body_system": "MRI / Neuro",
+    "question": "Please describe this MR image and summarize the main visible findings."
+  }
+}
